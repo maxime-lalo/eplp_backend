@@ -1,0 +1,38 @@
+{
+  "name": "eplp_backend",
+  "version": "1.0.0",
+  "description": "Backend from my website games",
+  "main": "index.js",
+  "scripts": {
+    "start" : "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxime-lalo/eplp_backend.git"
+  },
+  "keywords": [
+    "backend",
+    "website",
+    "game",
+    "games",
+    "eplp"
+  ],
+  "author": "Maxime Lalo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maxime-lalo/eplp_backend/issues"
+  },
+  "homepage": "https://github.com/maxime-lalo/eplp_backend#readme",
+  "dependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.3.1",
+    "@types/validator": "^13.6.3",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mysql2": "^2.2.5",
+    "typescript": "^4.3.5"
+  }
+}
