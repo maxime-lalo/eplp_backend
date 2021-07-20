@@ -59,6 +59,28 @@ export class UserController {
         return null;
     }
 
+    async getByToken(token: string): Promise<User | null> {
+        const res = await this.connection.query(`SELECT id, pseudo, first_name, last_name, email, creation_date, update_date, active FROM user WHERE token = ${escape(token)}`);
+        const data = res[0];
+        if(Array.isArray(data)) {
+            const rows = data as RowDataPacket[];
+            if(rows.length > 0) {
+                const row = rows[0];
+                return new User({
+                    id: parseInt(row["id"]),
+                    pseudo: row["pseudo"],
+                    firstName: row["first_name"],
+                    lastName: row["last_name"],
+                    email: row["email"],
+                    creationDate: new Date(row["creation_date"]),
+                    updateDate: new Date(row["update_date"]),
+                    active: row["active"]
+                })
+            }
+        }
+        return null;
+    }
+
     async create(user: IUserProps): Promise<User | null> {
         try {
             const res = await this.connection.execute("INSERT INTO user (pseudo, first_name, last_name, email, password) VALUES (?, ?, ?, ?, ?)", [
