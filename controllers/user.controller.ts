@@ -114,7 +114,7 @@ export class UserController {
                         return null;
                     }else{
                         const token = await hash(Date.now() + email, 5);
-                        const res2 = await this.connection.execute(`UPDATE user SET token = ${escape(token)} WHERE id = ${row['id']}`);
+                        const res2 = await this.connection.execute(`UPDATE user SET token = ${escape(token)},last_connection= NOW() WHERE id = ${row['id']}`);
                         return token;
                     }
                 }
