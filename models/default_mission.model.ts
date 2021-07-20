@@ -1,12 +1,12 @@
 export interface IDefaultMissionProps {
-    id?: string;
+    id?: number;
     title: string;
     description: string;
     logo: string;
 }
 
 export class DefaultMission implements IDefaultMissionProps {
-    id?: string;
+    id?: number;
     title: string;
     description: string;
     logo: string;

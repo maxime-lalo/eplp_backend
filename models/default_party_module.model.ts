@@ -1,14 +1,14 @@
 export interface IDefaultPartyModuleProps {
-    id?: string;
-    module_name: string;
+    id?: number;
+    moduleName: string;
 }
 
 export class DefaultPartyModule implements IDefaultPartyModuleProps {
-    id?: string;
-    module_name: string;
+    id?: number;
+    moduleName: string;
 
     constructor(props: IDefaultPartyModuleProps) {
         this.id = props.id;
-        this.module_name = props.module_name;
+        this.moduleName = props.moduleName;
     }
 }

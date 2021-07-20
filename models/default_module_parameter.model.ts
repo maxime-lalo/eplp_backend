@@ -1,15 +1,15 @@
-import { PartyModule } from "./party_modules.model";
+import { DefaultPartyModule } from "./default_party_module.model";
 
 export interface IDefaultModuleParameterProps {
-    id?: string;
-    module: PartyModule;
+    id?: number;
+    module: DefaultPartyModule;
     parameterName: string;
     value: string;
 }
 
 export class DefaultModuleParameter implements IDefaultModuleParameterProps {
-    id?: string;
-    module: PartyModule;
+    id?: number;
+    module: DefaultPartyModule;
     parameterName: string;
     value: string;
 
