@@ -1,3 +1,5 @@
+import {config} from "dotenv";
+config();
 import {Connection, createConnection} from 'mysql2/promise';
 
 export class DatabaseUtils {
@@ -7,11 +9,11 @@ export class DatabaseUtils {
     static async getConnection(): Promise<Connection> {
         if(!DatabaseUtils.connection) {
             DatabaseUtils.connection = await createConnection({
-                host: 'localhost',
-                user: 'root',
-                password: 'root', // ""
-                database: "eplp_back",
-                port: 3306
+                host: process.env.DB_HOST,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME,
+                port: Number.parseInt("" + process.env.DB_PORT)
             });
         }
         return DatabaseUtils.connection;
