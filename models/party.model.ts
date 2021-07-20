@@ -4,7 +4,7 @@ export interface IPartyProps {
     id?: number;
     name: string;
     creator: User;
-    creationDate: Date;
+    creationDate?: Date;
     endDate: Date;
 }
 
@@ -12,7 +12,7 @@ export class Party implements IPartyProps {
     id?: number;
     name: string;
     creator: User;
-    creationDate: Date;
+    creationDate?: Date;
     endDate: Date;
 
     constructor(props: IPartyProps) {

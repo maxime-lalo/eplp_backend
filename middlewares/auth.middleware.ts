@@ -11,6 +11,7 @@ export async function authMiddleware(req: express.Request, res: express.Response
 
         const user = await userController.getByToken(token);
         if (user !== null) {
+            res.locals.user = user;
             next();
             return;
         } else {
