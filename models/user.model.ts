@@ -9,6 +9,7 @@ export interface IUserProps {
     updateDate?: Date;
     active?: boolean;
     token?: string;
+    isPartyAdmin?: boolean;
 }
 
 export class User implements IUserProps {
@@ -22,6 +23,7 @@ export class User implements IUserProps {
     updateDate?: Date;
     active?: boolean;
     token?: string;
+    isPartyAdmin?: boolean;
 
     constructor(props: IUserProps) {
         this.id = props.id;
@@ -34,5 +36,6 @@ export class User implements IUserProps {
         this.updateDate = props.updateDate;
         this.active = props.active;
         this.token = props.token;
+        this.isPartyAdmin = props.isPartyAdmin;
     }
 }

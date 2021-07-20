@@ -2,6 +2,7 @@ import express from 'express';
 import {DatabaseUtils} from "../database";
 import {PartyController} from "../controllers";
 import { authMiddleware } from '../middlewares/auth.middleware';
+import { partyAdminMiddleware } from '../middlewares/party_admin.middleware';
 
 const router = express.Router();
 
@@ -53,6 +54,24 @@ router.post("/", authMiddleware, async function(req, res) {
     } else {
         res.status(201);
         res.json(party);
+    }
+});
+
+router.post("/invite", authMiddleware, partyAdminMiddleware, async function(req, res) {
+    const party = res.locals.party;
+    const inviter = res.locals.user;
+    const invited = req.body.user;
+
+    if (invited !== undefined){
+        const connection = await DatabaseUtils.getConnection();
+        const partyController = new PartyController(connection);
+        const invitation = await partyController.inviteUser(inviter.id, invited, party.id);
+        if(invitation === null) {
+            res.status(500).end();
+        } else {
+            res.status(201);
+            res.json(invitation);
+        }
     }
 });
 

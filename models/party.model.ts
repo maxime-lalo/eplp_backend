@@ -6,6 +6,7 @@ export interface IPartyProps {
     creator: User;
     creationDate?: Date;
     endDate: Date;
+    participants?: User[];
 }
 
 export class Party implements IPartyProps {
@@ -14,6 +15,7 @@ export class Party implements IPartyProps {
     creator: User;
     creationDate?: Date;
     endDate: Date;
+    participants?: User[];
 
     constructor(props: IPartyProps) {
         this.id = props.id;
@@ -21,5 +23,6 @@ export class Party implements IPartyProps {
         this.creator = props.creator;
         this.creationDate = props.creationDate;
         this.endDate = props.endDate;
+        this.participants = props.participants;
     }
 }
