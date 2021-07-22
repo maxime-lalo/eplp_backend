@@ -103,4 +103,30 @@ router.post("/invite", authMiddleware, partyAdminMiddleware, async function(req,
     }
 });
 
+router.post("/modifyParameter", authMiddleware, partyAdminMiddleware, async function(req,res){
+    const party = res.locals.party;
+    const parameter = req.body.parameter;
+    const newValue = req.body.value;
+
+    if(parameter === undefined || newValue === undefined){
+        res.status(400).json({
+            "error": "Missing parameters"
+        }).end();
+    }else{
+        const connection = await DatabaseUtils.getConnection();
+        const partyController = new PartyController(connection);
+        const parameterModified = await partyController.modifyParameter(parameter,newValue, party);
+
+        if(parameterModified){
+            res.status(200).json({
+                "success": "Parameter modified"
+            }).end();
+        }else{
+            res.status(500).json({
+                "error": "Server error"
+            }).end();
+        }
+    }
+})
+
 export default router;

@@ -7,7 +7,7 @@ export interface IPartyModuleProps {
     addingDate: Date;
     active: boolean;
     lastUpdateDate: Date;
-    parameters?: ModuleParameters[];
+    parameters: ModuleParameters[];
 }
 
 export class PartyModule implements IPartyModuleProps {
@@ -16,7 +16,7 @@ export class PartyModule implements IPartyModuleProps {
     addingDate: Date;
     active: boolean;
     lastUpdateDate: Date;
-    parameters?: ModuleParameters[];
+    parameters: ModuleParameters[];
 
     constructor(props: IPartyModuleProps) {
         this.id = props.id;

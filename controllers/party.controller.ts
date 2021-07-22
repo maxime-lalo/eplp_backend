@@ -215,4 +215,31 @@ export class PartyController {
         }
         return [];
     }
+
+    async modifyParameter(idParam: number, value : any, party: Party):Promise<boolean>{
+        if(party.modules !== undefined){
+            let isParameterFound: boolean = false;
+            for(let i = 0; i < party.modules.length; i++){
+                for(let j = 0; j < party.modules[i].parameters.length; j++){
+                    if(party.modules[i].parameters[j].id == idParam){
+                        isParameterFound = true;
+                    }
+                }
+            }
+
+            if(isParameterFound){
+                const res = await this.connection.query(`UPDATE module_parameter SET value = "${escape(value)}" WHERE id = ${idParam}`);
+                const data = res[0] as ResultSetHeader;
+                if(data.affectedRows == 1) {
+                    return true;
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
 }
