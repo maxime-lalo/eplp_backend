@@ -60,6 +60,7 @@ router.post("/", async function(req, res) {
     if(user === null) {
         res.status(500).end();
     } else {
+        user.password = undefined;
         res.status(201);
         res.json(user);
     }

@@ -45,7 +45,7 @@ export class DefaultsController {
     }
 
     async getModule(idModule: number):Promise<DefaultPartyModule | null>{
-        const res = await this.connection.query(`SELECT id, module_name FROM default_party_module`);
+        const res = await this.connection.query(`SELECT id, module_name FROM default_party_module WHERE id = ${idModule}`);
         const data = res[0];
         if(Array.isArray(data)) {
             const rows = data as RowDataPacket[];

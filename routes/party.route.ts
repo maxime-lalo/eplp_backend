@@ -1,6 +1,6 @@
 import express from 'express';
 import {DatabaseUtils} from "../database";
-import {PartyController} from "../controllers";
+import {DefaultsController, PartyController} from "../controllers";
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { partyAdminMiddleware } from '../middlewares/party_admin.middleware';
 
@@ -29,6 +29,33 @@ router.get("/:id", async function(req, res) {
     }
 });
 
+router.post("/addModule", authMiddleware, partyAdminMiddleware, async function(req, res) {
+    const partyId = req.body.party;
+    const moduleId = req.body.module;
+
+    const connection = await DatabaseUtils.getConnection();
+
+    const partyController = new PartyController(connection);
+    const defaultsController = new DefaultsController(connection);
+
+    let module = await defaultsController.getModule(moduleId);
+    let party = await partyController.getById(partyId);
+    
+    if(module !== null && party !== null){
+        const moduleAdded = await partyController.addModule(party,module);
+        if(moduleAdded === null) {
+            res.status(500).end();
+        } else {
+            res.status(201);
+            res.json(moduleAdded);
+        }
+    }else{
+        res.status(404).json({
+            "error" : "The module or the party you're looking for wasn't found"
+        }).end();
+    }
+});
+
 router.post("/", authMiddleware, async function(req, res) {
     const name = req.body.name;
     const endDate = req.body.endDate;
@@ -47,7 +74,8 @@ router.post("/", authMiddleware, async function(req, res) {
     const party = await partyController.create({
         name,
         endDate,
-        creator: res.locals.user.id
+        creator: res.locals.user.id,
+        modules : []
     });
     if(party === null) {
         res.status(500).end();

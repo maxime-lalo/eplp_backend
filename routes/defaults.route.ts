@@ -47,11 +47,11 @@ router.get("/module/:id", async function(req, res) {
 router.get("/parameters/:id", async function(req, res) {
     const connection = await DatabaseUtils.getConnection();
     const defaultsController = new DefaultsController(connection);
-    const parameter = await defaultsController.getModuleParameters(Number(req.params.id));
-    if(parameter === null) {
+    const parameters = await defaultsController.getModuleParameters(Number(req.params.id));
+    if(parameters === null) {
         res.status(404).end();
     } else {
-        res.json(parameter);
+        res.json(parameters);
     }
 });
 

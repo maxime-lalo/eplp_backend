@@ -1,3 +1,4 @@
+import { PartyModule } from './party_modules.model';
 import { User } from './user.model';
 
 export interface IPartyProps {
@@ -7,6 +8,7 @@ export interface IPartyProps {
     creationDate?: Date;
     endDate: Date;
     participants?: User[];
+    modules: PartyModule[];
 }
 
 export class Party implements IPartyProps {
@@ -16,6 +18,7 @@ export class Party implements IPartyProps {
     creationDate?: Date;
     endDate: Date;
     participants?: User[];
+    modules: PartyModule[];
 
     constructor(props: IPartyProps) {
         this.id = props.id;
@@ -24,5 +27,6 @@ export class Party implements IPartyProps {
         this.creationDate = props.creationDate;
         this.endDate = props.endDate;
         this.participants = props.participants;
+        this.modules = props.modules;
     }
 }

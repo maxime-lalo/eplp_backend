@@ -1,5 +1,6 @@
-import {Party, IPartyProps, User, UserParty} from "../models";
+import {Party, IPartyProps, User, UserParty, PartyModule, DefaultPartyModule, ModuleParameters} from "../models";
 import {Connection, escape, ResultSetHeader, RowDataPacket} from "mysql2/promise";
+import { DefaultsController } from ".";
 export interface PartyGetAllOptions {
     limit?: number,
     offset?: number
@@ -20,15 +21,19 @@ export class PartyController {
         const res = await this.connection.query(`SELECT id, name, creator, creation_date, end_date FROM party LIMIT ${offset}, ${limit}`);
         const data = res[0];
         if(Array.isArray(data)) {
-            return (data as RowDataPacket[]).map(function(row) {
-                return new Party({
-                    id: parseInt(row["id"]),
-                    name: row["name"],
-                    creator: row["creator"],
-                    creationDate: new Date(row["creation_date"]),
-                    endDate: new Date(row["end_date"])
-                })
-            });
+            const rows = data as RowDataPacket[];
+            let parties: Party[] = [];
+            for(let i = 0; i < rows.length; i++){
+                parties.push(new Party({
+                    id: parseInt(rows[i]["id"]),
+                    name: rows[i]["name"],
+                    creator: rows[i]["creator"],
+                    creationDate: new Date(rows[i]["creation_date"]),
+                    endDate: new Date(rows[i]["end_date"]),
+                    modules: await this.getPartyModules(Number(rows[i]['id']))
+                }));
+            }
+            return parties;
         }
         return [];
     }
@@ -46,7 +51,8 @@ export class PartyController {
                     creator: row["creator"],
                     creationDate: new Date(row["creation_date"]),
                     endDate: new Date(row["end_date"]),
-                    participants: await this.getParticipants(row['id'])
+                    participants: await this.getParticipants(row['id']),
+                    modules: await this.getPartyModules(row['id'])
                 })
             }
         }
@@ -124,5 +130,89 @@ export class PartyController {
             console.error(err); // log dans un fichier c'est mieux
             return null;
         }
+    }
+
+    async addModule(party: Party, module: DefaultPartyModule): Promise<Object | null>{
+        try {
+            const defaultsController = new DefaultsController(this.connection);
+            const parameters = await defaultsController.getModuleParameters(Number(module.id));
+            
+            if (parameters !== null){
+                const res = await this.connection.execute("INSERT INTO party_module (party, module) VALUES (?, ?)", [
+                    party.id,
+                    module.id
+                ]);
+                const headers = res[0] as ResultSetHeader;
+
+                let castedParameters: ModuleParameters[] = [];
+                for(let i = 0; i < parameters.length; i++){
+                    castedParameters.push(new ModuleParameters({
+                        parameterName: parameters[i].parameterName,
+                        value: parameters[i].value
+                    }));
+
+                    await this.connection.execute("INSERT INTO module_parameter (parameter_name, value, id_module) VALUES (?, ?, ?)", [
+                        parameters[i].parameterName,
+                        parameters[i].value,
+                        headers.insertId
+                    ]);
+                }
+
+                return new PartyModule({
+                    id: Number(headers.insertId),
+                    moduleName: module.moduleName,
+                    addingDate: new Date(),
+                    active: true,
+                    lastUpdateDate: new Date(),
+                    parameters: parameters
+                })
+            }
+            return null;
+        } catch(err) {
+            console.error(err); // log dans un fichier c'est mieux
+            return null;
+        }
+    }
+
+    async getPartyModules(idParty: number):Promise<PartyModule[]>{
+        const res = await this.connection.query(`SELECT a.id,b.module_name,a.adding_date,a.last_update_date FROM party_module a INNER JOIN default_party_module b ON a.module = b.id WHERE a.active = 1 AND a.party = ${idParty}`);
+        const data = res[0];
+        if(Array.isArray(data)) {
+            const rows = data as RowDataPacket[];
+            let modules: PartyModule[] = [];
+
+            for(let i = 0; i < rows.length; i++){
+                modules.push(new PartyModule({
+                    id: parseInt(rows[i]["id"]),
+                    moduleName: rows[i]["module_name"],
+                    addingDate: new Date(rows[i]['adding_date']),
+                    lastUpdateDate: new Date(rows[i]['adding_date']),
+                    active: true,
+                    parameters: await this.getModuleParameters(Number(rows[i]["id"]))
+                }))
+            }
+
+            return modules;
+        }
+        return [];
+    }
+
+    async getModuleParameters(idModule: number):Promise<ModuleParameters[]>{
+        const res = await this.connection.query(`SELECT id,parameter_name,value FROM module_parameter WHERE id_module = ${idModule}`);
+        const data = res[0];
+        if(Array.isArray(data)) {
+            const rows = data as RowDataPacket[];
+            let params: ModuleParameters[] = [];
+
+            for(let i = 0; i < rows.length; i++){
+                params.push(new ModuleParameters({
+                    id: parseInt(rows[i]["id"]),
+                    parameterName: rows[i]["parameter_name"],
+                    value: rows[i]['value']
+                }));
+            }
+            return params;
+        }
+        return [];
     }
 }
