@@ -1,8 +1,7 @@
 import express from 'express';
 import {DatabaseUtils} from "../database";
 import {DefaultsController, PartyController} from "../controllers";
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { partyAdminMiddleware } from '../middlewares/party_admin.middleware';
+import { authMiddleware, partyAdminMiddleware,partyParticipantMiddleware } from '../middlewares';
 
 const router = express.Router();
 
@@ -29,7 +28,7 @@ router.get("/:id", async function(req, res) {
     }
 });
 
-router.post("/addModule", authMiddleware, partyAdminMiddleware, async function(req, res) {
+router.post("/module", authMiddleware, partyAdminMiddleware, async function(req, res) {
     const partyId = req.body.party;
     const moduleId = req.body.module;
 
@@ -42,16 +41,68 @@ router.post("/addModule", authMiddleware, partyAdminMiddleware, async function(r
     let party = await partyController.getById(partyId);
     
     if(module !== null && party !== null){
-        const moduleAdded = await partyController.addModule(party,module);
-        if(moduleAdded === null) {
-            res.status(500).end();
-        } else {
-            res.status(201);
-            res.json(moduleAdded);
+        let moduleAlreadyPresent = false;
+        for(let i = 0; i < party.modules.length; i++){
+            if(party.modules[i].moduleName === module.moduleName){
+                moduleAlreadyPresent = true;
+            }
         }
+
+        if(!moduleAlreadyPresent){
+            const moduleAdded = await partyController.addModule(party,module);
+            if(moduleAdded === null) {
+                res.status(500).end();
+            } else {
+                res.status(201).json(moduleAdded);
+            }
+        }else{
+            res.status(400).json({
+                "error": "The module has already been added to this party"
+            })
+        }
+        
     }else{
         res.status(404).json({
             "error" : "The module or the party you're looking for wasn't found"
+        }).end();
+    }
+});
+
+router.delete("/module", authMiddleware, partyAdminMiddleware, async function(req, res) {
+    const partyId = req.body.party;
+    const moduleId = req.body.module;
+
+    const connection = await DatabaseUtils.getConnection();
+
+    const partyController = new PartyController(connection);
+
+    let party = await partyController.getById(partyId);
+    
+    if(party !== null){
+        let module = null;
+        for(let i = 0; i < party.modules.length; i++){
+            if(party.modules[i].id === Number(moduleId)){
+                module = party.modules[i];
+            }
+        }
+
+        if(module !== null){
+            const moduleAdded = await partyController.removeModule(module);
+            if(moduleAdded === null) {
+                res.status(500).end();
+            } else {
+                res.status(201).json({
+                    "success": "The module has been removed from the party"
+                });
+            }
+        }else{
+            res.status(400).json({
+                "error": "The module you want to remove is not in this party"
+            })
+        }
+    }else{
+        res.status(404).json({
+            "error" : "The party you're looking for wasn't found"
         }).end();
     }
 });

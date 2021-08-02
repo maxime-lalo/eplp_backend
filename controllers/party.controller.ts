@@ -132,7 +132,7 @@ export class PartyController {
         }
     }
 
-    async addModule(party: Party, module: DefaultPartyModule): Promise<Object | null>{
+    async addModule(party: Party, module: DefaultPartyModule): Promise<PartyModule | null>{
         try {
             const defaultsController = new DefaultsController(this.connection);
             const parameters = await defaultsController.getModuleParameters(Number(module.id));
@@ -174,6 +174,23 @@ export class PartyController {
         }
     }
 
+    async removeModule(partyModule: PartyModule): Promise<boolean>{
+        try {
+            const deleteParams = await this.connection.execute("DELETE FROM module_parameter WHERE id_module = ?",[
+                partyModule.id
+            ]);
+
+            const deleteModuleFromParty = await this.connection.execute("DELETE FROM party_module WHERE id = ?",[
+                partyModule.id
+            ]);
+
+            return true;
+        } catch(err) {
+            console.error(err); // log dans un fichier c'est mieux
+            return false;
+        }
+    }
+    
     async getPartyModules(idParty: number):Promise<PartyModule[]>{
         const res = await this.connection.query(`SELECT a.id,b.module_name,a.adding_date,a.last_update_date FROM party_module a INNER JOIN default_party_module b ON a.module = b.id WHERE a.active = 1 AND a.party = ${idParty}`);
         const data = res[0];
