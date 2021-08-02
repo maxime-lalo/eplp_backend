@@ -207,15 +207,28 @@ router.post("/modifyParameter", authMiddleware, partyAdminMiddleware, async func
         const connection = await DatabaseUtils.getConnection();
         const partyController = new PartyController(connection);
         const parameterModified = await partyController.modifyParameter(parameter,newValue, party);
-
-        if(parameterModified){
+        if(parameterModified === apiReturnCodes.SUCCESS){
             res.status(200).json({
-                "success": "Parameter modified"
+                "success": "The parameter has been updated"
             }).end();
         }else{
-            res.status(500).json({
-                "error": "Server error"
-            }).end();
+            switch(parameterModified){
+                case apiReturnCodes.NOT_FOUND:
+                    res.status(404).json({
+                        "error": "The module or the parameter has not been found"
+                    }).end();
+                    break;
+                case apiReturnCodes.ALREADY_PRESENT:
+                    res.status(400).json({
+                        "error": "The parameter already had that value"
+                    }).end();
+                    break;
+                default:
+                    res.status(500).json({
+                        "error": "Server error"
+                    }).end();
+                    break;
+            }
         }
     }
 })

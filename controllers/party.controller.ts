@@ -264,7 +264,7 @@ export class PartyController {
         return [];
     }
 
-    async modifyParameter(idParam: number, value : any, party: Party):Promise<boolean>{
+    async modifyParameter(idParam: number, value : any, party: Party):Promise<number>{
         if(party.modules !== undefined){
             let isParameterFound: boolean = false;
             for(let i = 0; i < party.modules.length; i++){
@@ -279,15 +279,15 @@ export class PartyController {
                 const res = await this.connection.query(`UPDATE module_parameter SET value = "${escape(value)}" WHERE id = ${idParam}`);
                 const data = res[0] as ResultSetHeader;
                 if(data.affectedRows == 1) {
-                    return true;
+                    return apiReturnCodes.SUCCESS;
                 }else{
-                    return false;
+                    return apiReturnCodes.ALREADY_PRESENT;
                 }
             }else{
-                return false;
+                return apiReturnCodes.NOT_FOUND;
             }
         }else{
-            return false;
+            return apiReturnCodes.NOT_FOUND;
         }
     }
 }
