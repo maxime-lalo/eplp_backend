@@ -1,6 +1,8 @@
 import {Party, IPartyProps, User, UserParty, PartyModule, DefaultPartyModule, ModuleParameters} from "../models";
 import {Connection, escape, ResultSetHeader, RowDataPacket} from "mysql2/promise";
 import { DefaultsController } from ".";
+import { apiReturnCodes } from "../api_return_codes";
+
 export interface PartyGetAllOptions {
     limit?: number,
     offset?: number
@@ -104,12 +106,12 @@ export class PartyController {
         return [];
     }
 
-    async inviteUser(idInviter: number, idInvited: number, idParty: number): Promise<Object | null>{
+    async inviteUser(idInviter: number, idInvited: number, idParty: number): Promise<Object | number>{
         const party = await this.getById("" + idParty);
         if (party?.participants !== undefined){
             for(let i = 0; i < party.participants.length; i++){
                 if(party.participants[i].id == idInvited){
-                    return null;
+                    return apiReturnCodes.USER_ALREADY_PRESENT;
                 }
             }
         }
@@ -128,9 +130,38 @@ export class PartyController {
             });
         } catch(err) {
             console.error(err); // log dans un fichier c'est mieux
-            return null;
+            return apiReturnCodes.DB_ERROR;
         }
     }
+
+    async removeUser(idInvited: number, party: Party): Promise<number>{
+        let userInParty = false;
+        if (party.participants !== undefined){
+            for(let i = 0; i < party.participants.length; i++){
+                if(party.participants[i].id == idInvited){
+                    userInParty = true;
+                    break;
+                }
+            }
+        }
+        
+        if(!userInParty){
+            return apiReturnCodes.USER_NOT_FOUND;
+        }
+
+        try {
+            const res = await this.connection.execute("DELETE FROM user_party WHERE user = ? AND party = ?", [
+                idInvited,
+                party.id
+            ]);
+            
+            return apiReturnCodes.SUCCESS;
+        } catch(err) {
+            console.error(err); // log dans un fichier c'est mieux
+            return apiReturnCodes.DB_ERROR;
+        }
+    }
+
 
     async addModule(party: Party, module: DefaultPartyModule): Promise<PartyModule | null>{
         try {

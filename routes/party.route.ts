@@ -2,7 +2,7 @@ import express from 'express';
 import {DatabaseUtils} from "../database";
 import {DefaultsController, PartyController} from "../controllers";
 import { authMiddleware, partyAdminMiddleware,partyParticipantMiddleware } from '../middlewares';
-
+import { apiReturnCodes } from '../api_return_codes';
 const router = express.Router();
 
 router.get("/", async function(req, res) {
@@ -136,7 +136,7 @@ router.post("/", authMiddleware, async function(req, res) {
     }
 });
 
-router.post("/invite", authMiddleware, partyAdminMiddleware, async function(req, res) {
+router.post("/user", authMiddleware, partyAdminMiddleware, async function(req, res) {
     const party = res.locals.party;
     const inviter = res.locals.user;
     const invited = req.body.user;
@@ -145,11 +145,51 @@ router.post("/invite", authMiddleware, partyAdminMiddleware, async function(req,
         const connection = await DatabaseUtils.getConnection();
         const partyController = new PartyController(connection);
         const invitation = await partyController.inviteUser(inviter.id, invited, party.id);
-        if(invitation === null) {
-            res.status(500).end();
+        if(Number(invitation)) {
+            if(invitation === apiReturnCodes.DB_ERROR){
+                res.status(500).json({
+                    "error": "Database error"
+                }).end();
+            }else{
+                res.status(400).json({
+                    "error": "User already invited to this party"
+                }).end();
+            }
         } else {
-            res.status(201);
-            res.json(invitation);
+            res.status(201).json(invitation);
+        }
+    }
+});
+
+router.delete("/user", authMiddleware, partyAdminMiddleware, async function(req, res) {
+    const party = res.locals.party;
+    const inviter = res.locals.user;
+    const invited = req.body.user;
+
+    if (invited !== undefined){
+        const connection = await DatabaseUtils.getConnection();
+        const partyController = new PartyController(connection);
+        const removeUser = await partyController.removeUser(invited, party);
+        if(removeUser === apiReturnCodes.SUCCESS) {
+            res.status(201).json({"success":"The user has been removed from the party"});
+        } else {
+            switch(removeUser){
+                case apiReturnCodes.PARTY_NOT_FOUND:
+                    res.status(400).json({
+                        "error": "The party you're referring wasn't found"
+                    })
+                    break;
+                case apiReturnCodes.USER_NOT_FOUND:
+                    res.status(400).json({
+                        "error": "The user you're referring is not in this party"
+                    })
+                    break;
+                case apiReturnCodes.DB_ERROR:
+                    res.status(500).json({
+                        "error": "Database error"
+                    })
+                    break;
+            }
         }
     }
 });
