@@ -163,61 +163,81 @@ export class PartyController {
     }
 
 
-    async addModule(party: Party, module: DefaultPartyModule): Promise<PartyModule | null>{
+    async addModule(party: Party, module: DefaultPartyModule): Promise<PartyModule | number>{
         try {
-            const defaultsController = new DefaultsController(this.connection);
-            const parameters = await defaultsController.getModuleParameters(Number(module.id));
-            
-            if (parameters !== null){
-                const res = await this.connection.execute("INSERT INTO party_module (party, module) VALUES (?, ?)", [
-                    party.id,
-                    module.id
-                ]);
-                const headers = res[0] as ResultSetHeader;
-
-                let castedParameters: ModuleParameters[] = [];
-                for(let i = 0; i < parameters.length; i++){
-                    castedParameters.push(new ModuleParameters({
-                        parameterName: parameters[i].parameterName,
-                        value: parameters[i].value
-                    }));
-
-                    await this.connection.execute("INSERT INTO module_parameter (parameter_name, value, id_module) VALUES (?, ?, ?)", [
-                        parameters[i].parameterName,
-                        parameters[i].value,
-                        headers.insertId
-                    ]);
+            for(let i = 0; i < party.modules.length; i++){
+                if(party.modules[i].moduleName == module.moduleName){
+                    return apiReturnCodes.ALREADY_PRESENT;
                 }
-
-                return new PartyModule({
-                    id: Number(headers.insertId),
-                    moduleName: module.moduleName,
-                    addingDate: new Date(),
-                    active: true,
-                    lastUpdateDate: new Date(),
-                    parameters: parameters
-                })
             }
-            return null;
+
+            const res = await this.connection.query(`SELECT a.id,b.module_name,a.adding_date,a.last_update_date FROM party_module a INNER JOIN default_party_module b ON a.module = b.id WHERE a.party = ${party.id}`);
+            const data = res[0];
+
+            let desactivedInDb:boolean = false;
+            if(Array.isArray(data)) {
+                const rows = data as RowDataPacket[];
+                for(let i = 0; i < rows.length; i++){
+                    if(module.moduleName === rows[i]['module_name']){
+                        desactivedInDb = true;
+                    }
+                }
+            }
+            
+            if(desactivedInDb){
+                let sqlStr = `UPDATE party_module SET active = 1,last_update_date = NOW() WHERE party = ${party.id} AND module = ${module.id}`;
+                await this.connection.execute(sqlStr);
+                return apiReturnCodes.SUCCESS;
+            }else{
+                const defaultsController = new DefaultsController(this.connection);
+                const parameters = await defaultsController.getModuleParameters(Number(module.id));
+            
+                if (parameters !== null){
+                    const res = await this.connection.execute("INSERT INTO party_module (party, module) VALUES (?, ?)", [
+                        party.id,
+                        module.id
+                    ]);
+                    const headers = res[0] as ResultSetHeader;
+
+                    let castedParameters: ModuleParameters[] = [];
+                    for(let i = 0; i < parameters.length; i++){
+                        castedParameters.push(new ModuleParameters({
+                            parameterName: parameters[i].parameterName,
+                            value: parameters[i].value
+                        }));
+
+                        await this.connection.execute("INSERT INTO module_parameter (parameter_name, value, id_module) VALUES (?, ?, ?)", [
+                            parameters[i].parameterName,
+                            parameters[i].value,
+                            headers.insertId
+                        ]);
+                    }
+
+                    return new PartyModule({
+                        id: Number(headers.insertId),
+                        moduleName: module.moduleName,
+                        addingDate: new Date(),
+                        active: true,
+                        lastUpdateDate: new Date(),
+                        parameters: parameters
+                    })
+                }
+            }
+            return apiReturnCodes.NOT_FOUND;
         } catch(err) {
             console.error(err); // log dans un fichier c'est mieux
-            return null;
+            return apiReturnCodes.DB_ERROR;
         }
     }
 
     async removeModule(partyModule: PartyModule): Promise<boolean>{
         try {
-            const deleteParams = await this.connection.execute("DELETE FROM module_parameter WHERE id_module = ?",[
+            const deleteModuleFromParty = await this.connection.execute("UPDATE party_module SET active = 0,last_update_date = NOW() WHERE id = ?",[
                 partyModule.id
             ]);
-
-            const deleteModuleFromParty = await this.connection.execute("DELETE FROM party_module WHERE id = ?",[
-                partyModule.id
-            ]);
-
             return true;
         } catch(err) {
-            console.error(err); // log dans un fichier c'est mieux
+            console.error(err);
             return false;
         }
     }
