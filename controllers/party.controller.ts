@@ -203,13 +203,15 @@ export class PartyController {
                     for(let i = 0; i < parameters.length; i++){
                         castedParameters.push(new ModuleParameters({
                             parameterName: parameters[i].parameterName,
-                            value: parameters[i].value
+                            value: parameters[i].value,
+                            defaultParameter: Number(parameters[i].id)
                         }));
 
-                        await this.connection.execute("INSERT INTO module_parameter (parameter_name, value, id_module) VALUES (?, ?, ?)", [
+                        await this.connection.execute("INSERT INTO module_parameter (parameter_name, value, id_module, id_default_parameter) VALUES (?, ?, ?, ?)", [
                             parameters[i].parameterName,
                             parameters[i].value,
-                            headers.insertId
+                            headers.insertId,
+                            parameters[i].id
                         ]);
                     }
 
@@ -219,7 +221,7 @@ export class PartyController {
                         addingDate: new Date(),
                         active: true,
                         lastUpdateDate: new Date(),
-                        parameters: parameters
+                        parameters: castedParameters
                     })
                 }
             }
@@ -266,7 +268,7 @@ export class PartyController {
     }
 
     async getModuleParameters(idModule: number):Promise<ModuleParameters[]>{
-        const res = await this.connection.query(`SELECT id,parameter_name,value FROM module_parameter WHERE id_module = ${idModule}`);
+        const res = await this.connection.query(`SELECT id,parameter_name, value, id_default_parameter FROM module_parameter WHERE id_module = ${idModule}`);
         const data = res[0];
         if(Array.isArray(data)) {
             const rows = data as RowDataPacket[];
@@ -276,7 +278,8 @@ export class PartyController {
                 params.push(new ModuleParameters({
                     id: parseInt(rows[i]["id"]),
                     parameterName: rows[i]["parameter_name"],
-                    value: rows[i]['value']
+                    value: rows[i]['value'],
+                    defaultParameter: rows[i]['id_default_parameter']
                 }));
             }
             return params;
