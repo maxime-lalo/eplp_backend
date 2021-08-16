@@ -5,6 +5,7 @@ const SUCCESS = 3;
 const USER_ALREADY_PRESENT = 4;
 const NOT_FOUND = 5;
 const ALREADY_PRESENT = 6;
+const USER_ERROR = 7;
 
 export interface apiReturnCodesI {
   PARTY_NOT_FOUND: number;
@@ -14,6 +15,7 @@ export interface apiReturnCodesI {
   USER_ALREADY_PRESENT: number;
   NOT_FOUND: number;
   ALREADY_PRESENT: number;
+  USER_ERROR: number;
 }
 
 export const apiReturnCodes: apiReturnCodesI = {
@@ -23,5 +25,6 @@ export const apiReturnCodes: apiReturnCodesI = {
   DB_ERROR,
   SUCCESS,
   NOT_FOUND,
-  ALREADY_PRESENT
+  ALREADY_PRESENT,
+  USER_ERROR
 }

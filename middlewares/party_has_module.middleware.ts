@@ -12,6 +12,7 @@ export async function partyHasModuleMiddleware(req: express.Request, res: expres
         if(party.modules !== undefined){
             for(let i = 0; i < party.modules.length; i++){
                 if(party.modules[i].id == module){
+                    res.locals.module = party.modules[i];
                     next();
                     return;
                 }
